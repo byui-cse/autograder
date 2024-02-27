@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "acorn": "^8.11.3",
+    "css-tree": "^2.3.1",
+    "eslint": "^8.2.0",
+    "htmlhint": "^1.1.4",
+    "node-fetch": "^3.3.2",
+    "parse5": "^7.1.2",
+    "stylelint": "^16.2.0",
+    "stylelint-config-standard": "^36.0.0"
+  },
+  "devDependencies": {
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.25.2"
+  },
+  "scripts": {
+    "demo": "node ./demo/autograder.js"
+  },
+  "type": "module"
+}
