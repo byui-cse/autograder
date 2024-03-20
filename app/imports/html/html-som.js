@@ -1,4 +1,4 @@
-import WhatIs from '../what-is.js';
+import { GetLines, GetValue, WhatIs } from '../helpers.js';
 
 class HtmlSom {
 
@@ -17,12 +17,16 @@ class HtmlSom {
         this.updateStructure(struct);
     }
 
+    get src() {
+        return this.#struct.src || '';
+    }
+
     find(str) {
         const matches = this.findAll(str);
-        if (matches.size === 0) {
-            return null;
+        if (matches.length > 0) {
+            return matches[0];
         }
-        return matches.values().next().value;
+        return {};
     }
 
     findAll(str) {
@@ -38,10 +42,8 @@ class HtmlSom {
             this.#findAll(search, element, selectors, matches);
 
             if (matches.length > 0) {
-                search = new Map();
-                matches.forEach((obj) => {
-                    search.set(obj.key, obj.value);
-                });
+                // search = new Map();
+                search = matches;
             } else {
                 search = som;
             }
@@ -50,7 +52,8 @@ class HtmlSom {
         if (search !== som) {
             return search;
         }
-        return new Map();
+        // return new Map();
+        return [];
     }
 
     #findAll(map, element, selectors, matches) {
@@ -97,7 +100,10 @@ class HtmlSom {
                 }
 
                 if (record) {
-                    matches.push({ key, value: node });
+                    matches.push({
+                        key,
+                        value: node
+                    });
                 }
             }
 
@@ -105,6 +111,20 @@ class HtmlSom {
                 this.#findAll(node.children, element, selectors, matches);
             }
         });
+    }
+
+    /**
+     * Get a portion of the original source file.
+     *
+     * @param {string} source - The source file to pull lines from.
+     * @param {int} lineStart - The line to start at.
+     * @param {int} lineEnd - The line to end at.
+     * @param {int} colStart - The column to start at; send 0 for bodies and blocks.
+     * @param {int} colEnd - The column to end at; send 0 for bodies and blocks.
+     * @returns {string} The portion of the source file requested.
+     */
+    getLine(source, lineStart, lineEnd, colStart = 0, colEnd = 0) {
+        return GetLines(source, lineStart, lineEnd, colStart, colEnd);
     }
 
     #getSelectorParts(part) {
@@ -190,5 +210,8 @@ class HtmlSom {
     }
 
 }
+
+HtmlSom.prototype.getLines = GetLines;
+HtmlSom.prototype.getValue = GetValue;
 
 export default HtmlSom;

@@ -4,7 +4,7 @@ import Stylelint from 'stylelint';
 import { ESLint } from 'eslint';
 import { HTMLHint } from 'htmlhint';
 import Reporter from './reporter.js';
-import WhatIs from './what-is.js';
+import { WhatIs } from './helpers.js';
 import getPaths from '../paths.js';
 
 const { APPDIR } = getPaths();

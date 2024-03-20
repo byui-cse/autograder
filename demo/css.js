@@ -133,6 +133,10 @@ a:hover {
     nav {
       flex-direction: column;
     }
+
+    div {
+        list-style: none;
+    }
     
     header {
       padding: 10px;
@@ -331,9 +335,119 @@ a {
 }
 `;
 
+const parserTest = `
+/* 1. Descendant Selector */
+div p {
+  color: blue;
+}
+
+/* 2. Child Selector */
+ul > li {
+  font-weight: bold;
+}
+
+/* 3. Adjacent Sibling Selector */
+h1 + p {
+  font-style: italic;
+}
+
+/* 4. General Sibling Selector */
+h2 ~ p {
+  text-decoration: underline;
+}
+
+/* 5. Universal Selector */
+* {
+  margin: 0;
+  padding: 0;
+}
+
+/* 6. Attribute Selectors */
+a[target="_blank"] {
+  color: red;
+}
+
+input[type="text"] {
+  border: 1px solid green;
+}
+
+div[class~="highlighted"] {
+  background-color: yellow;
+}
+
+a[href|="/en"] {
+  font-size: 1.2em;
+}
+
+a[href^="https://"] {
+  text-decoration: none;
+}
+
+a[href$=".pdf"] {
+  font-weight: bold;
+}
+
+img[alt*="logo"] {
+  border: 2px solid black;
+}
+
+/* 7. Class Selector */
+.main-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* 8. ID Selector */
+#page-header {
+  background-color: #333;
+  color: #fff;
+  padding: 20px;
+}
+
+/* 9. Pseudo-classes */
+a:visited {
+  color: purple;
+}
+
+li:first-child {
+  list-style-type: none;
+}
+
+/* 10. Pseudo-elements */
+p::first-line {
+  font-weight: bold;
+}
+
+::before {
+  content: "Note: ";
+  font-style: italic;
+}
+`;
+
 // const c = CssTreeHelper.parse(scss);
 // const c = CssTreeHelper.parse(quick);
+// const c = CssTreeHelper.parse(parserTest);
 const c = CssTreeHelper.parse(`${css}\n${simpleCss}\n${trial}`);
+const struct = c.getStructure();
+delete struct.src;
+// console.log(struct.src);
+// console.log(struct.som['body N<2>'].declaration.color);
+const print = c.findAll('.test');
+console.log(print);
+// print.forEach((node) => {
+//     console.log(node[node.key].loc);
+// });
 
-console.log(c.getStructure());
-console.log(c.findAll('@media'));
+// function trav(obj) {
+//     Object.values(obj).forEach((item) => {
+//         if (item.loc) {
+//             console.log(item.loc);
+//         }
+//         if (item.declaration) {
+//             trav(item.declaration);
+//         }
+//     });
+// }
+// trav(struct.som);
+// console.log(c.getValue(print[0], struct.src));
+// console.log(print['@media only print and (max-width: 600px) N<262>']);

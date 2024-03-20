@@ -3,12 +3,13 @@
 
 /**
  * @param {Parser} Acorn - Parses JavaScript code into an AST like tree.
+ *
  * @param {JsSom} JsSom - Autograder's structured object model (SOM) for JavaScript.
  * @param {WhatIs} WhatIs - The fastest way to determine the type of anything.
  */
 import { Parser as Acorn } from 'acorn';
 import JsSom from './js-som.js';
-import WhatIs from '../what-is.js';
+import { GetLines, GetValue, WhatIs } from '../helpers.js';
 
 /**
  * Transforms the Acorn JavaScript tree into Autograder's JsSom.
@@ -44,7 +45,7 @@ class JsTreeHelper {
         let startColumn = loc.start.column;
         let endColumn = loc.end.column;
 
-        const baseClass = this.getLines(this.#source, startLine, endLine, startColumn, endColumn).trim();
+        const baseClass = GetLines(this.#source, startLine, endLine, startColumn, endColumn).trim();
 
         let superClass = '';
         if (node.superClass) {
@@ -55,7 +56,7 @@ class JsTreeHelper {
             startColumn = node.superClass.loc.start.column;
             endColumn = node.superClass.loc.end.column;
 
-            superClass += this.getLines(this.#source, startLine, endLine, startColumn, endColumn).trim();
+            superClass += GetLines(this.#source, startLine, endLine, startColumn, endColumn).trim();
         }
 
         if (node.type.includes('Function')) {
@@ -81,7 +82,7 @@ class JsTreeHelper {
         // If kind is missing this is a property.
         const kind = node.kind || 'property';
 
-        let key = `${kind} ${this.getLines(this.#source, startLine, endLine, startColumn, endColumn).trim()}`;
+        let key = `${kind} ${GetLines(this.#source, startLine, endLine, startColumn, endColumn).trim()}`;
 
         // If the method or property is private or static modify the key accordingly.
         if (key.includes('#')) {
@@ -138,7 +139,7 @@ class JsTreeHelper {
             }
 
             // Add to the comma separated list of variable declarations (if any).
-            declarations += `${this.getLines(this.#source, startLine, endLine, startColumn, endColumn).trim()}, `;
+            declarations += `${GetLines(this.#source, startLine, endLine, startColumn, endColumn).trim()}, `;
         });
 
         // Remove the trailing space and comma added by this process.
@@ -186,7 +187,7 @@ class JsTreeHelper {
             endColumn = node.expression.callee.loc.end.column;
         }
 
-        const key = this.getLines(this.#source, startLine, endLine, startColumn, endColumn).trim();
+        const key = GetLines(this.#source, startLine, endLine, startColumn, endColumn).trim();
 
         // If this call is to update an counter modify the key accordingly.
         if (key.includes('++') || key.includes('+=')) {
@@ -258,46 +259,6 @@ class JsTreeHelper {
     }
 
     /**
-     * Get a portion of the original source file.
-     * @param {string} source - The source file to pull lines from.
-     * @param {int} lineStart - The line to start at.
-     * @param {int} lineEnd - The line to end at.
-     * @param {int} [colStart] - The column to start at; send 0 for bodies and blocks.
-     * @param {int} [colEnd] - The column to end at; send 0 for bodies and blocks.
-     * @returns {string} The portion of the source file requested.
-     */
-    getLines(source, lineStart, lineEnd, colStart = 0, colEnd = 0) {
-
-        colStart += 1;
-        lineEnd += 1;
-
-        const lines = source.split('\n');
-
-        // Handle line errors
-        if (lineStart > lines.length) return '';
-        if (lineEnd > lines.length) lineEnd = lines.length;
-
-        // Handle columns
-        colStart = colStart || 0;
-        colEnd = colEnd || 0;
-
-        // Slice lines
-        const start = lineStart - 1;
-        const end = lineEnd - 1;
-        const slice = lines.slice(start, end);
-
-        // Extract columns
-        const result = slice.map((line) => {
-            if (!colStart || !colEnd) {
-                return line;
-            }
-            return line.substring(colStart - 1, colEnd);
-        }).join('\n');
-
-        return result;
-    }
-
-    /**
      * Determine the string (key) that represents this node.
      * @param {Node} node - The Acorn Node being processed.
      * @returns {string} The key that represents this node.
@@ -338,7 +299,7 @@ class JsTreeHelper {
         }
 
         // Generic catch all for anything else.
-        return this.getLines(this.#source, startLine, endLine, startColumn, endColumn).trim();
+        return GetLines(this.#source, startLine, endLine, startColumn, endColumn).trim();
     }
 
     /**
@@ -373,7 +334,7 @@ class JsTreeHelper {
             classes: {},
             error: false,
             functions: {},
-            getLines: this.getLines,
+            getLines: GetLines,
             som: {},
             src: jsStr,
             variables: {}

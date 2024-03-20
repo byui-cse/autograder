@@ -14,7 +14,7 @@ const demo = `
         Para two
         <a href="#noda" data-test="testing-data">Test Link</a>
     </p>
-    <p class="text-test">
+    <p class="test">
         This is just some text.
     </p>
 </body>
@@ -22,8 +22,40 @@ const demo = `
 `;
 
 const hsom = HtmlTreeHelper.parse(demo);
-console.log(hsom.getStructure().som.get('html lang="en" N<2>'));
-// console.log(hsom.find('p.text-test'));
+// console.log(hsom.getStructure());
+console.log(hsom.findAll('p.test'));
 // hsom.findAll('p').forEach((node) => {
+//     // console.log(hsom.getValue(result, hsom.src));
 //     console.log(node);
 // });
+
+// function trav(map) {
+//     map.forEach((value, key, map) => {
+//         if (value?.node?.loc) {
+//             console.log(value.node.loc);
+//         }
+//         if (value.children) {
+//             trav(value.children);
+//         }
+//     });
+// }
+// trav(hsom.getStructure().som);
+// {
+//     attrsMap: Map(1) {
+//         [Key] => [Value]
+//     },
+//     children: Map(1) {
+//       [Key] => [Node]
+//     },
+//     node: {
+//       nodeName: 'p',
+//       tagName: 'p',
+//       attrs: [ [Object] ], // The original attrs object used to make attrsMap
+//       namespaceURI: 'http://www.w3.org/1999/xhtml',
+//       childNodes: [ [Object], [Object], [Object] ], // Original child object used to make children
+//       parentNode: {
+//         [Node]
+//       },
+//       loc: [Loc Object]
+//     }
+// }

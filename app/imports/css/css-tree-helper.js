@@ -12,6 +12,13 @@ class CssTreeHelper {
         spaceBeforeComma: /\s+,/g
     };
 
+    /**
+     * @private
+     * Transform a CSS Tree function node into a querySelector like string.
+     *
+     * @param {object} node The CSS Tree object for this node.
+     * @returns {string} The querySelector like representation of this node.
+     */
     #getFunctionValue(node) {
         let value = ` ${node.data.name}(`;
 
@@ -28,11 +35,15 @@ class CssTreeHelper {
         return `${value.trimEnd()})`;
     }
 
+    /**
+     * @private
+     * Transform a CSS Tree generic node into a querySelector like string.
+     *
+     * @param {object} node The CSS Tree object for this node.
+     * @returns {string} The querySelector like representation of this node.
+     */
     #getNodeValue(node) {
-        // console.log(node);
-
         let value = ` ${node.data?.value || node.data?.name || ''}`;
-
         switch (node.data?.type) {
             case 'Dimension':
                 value += node.data?.unit || '';
@@ -51,18 +62,24 @@ class CssTreeHelper {
         return value;
     }
 
+    /**
+     * @private
+     * Transform a CSS Tree declaration node into a querySelector like string.
+     *
+     * @param {object} node The CSS Tree object for this node.
+     * @returns {string} The querySelector like representation of this node.
+     */
     #getDeclarationValue(decl) {
         let value = '';
 
+        // If there are no children objects making up this node use its value directly.
         if (!decl.value.children) {
-            return;
+            return value;
         }
 
+        // Start building up the querySelector like string from the children objects.
         let current = decl.value.children.head;
-
-        // console.log(decl);
         while (current != null) {
-            // console.log(current);
             if (current.data.type === 'Function') {
                 value += this.#getFunctionValue(current);
             } else {
@@ -71,36 +88,38 @@ class CssTreeHelper {
             current = current.next;
         }
 
+        // Clean out unnecessary formatting.
         value = value.trim().replace(this.#regex.spaceAfterOpenParen, '(');
         value = value.replace(this.#regex.extraSpaces, ' ').replace(this.#regex.spaceBeforeComma, ',');
-        // console.log('getDeclarationValue', value);
 
-        let { line } = decl.loc.start;
-        if (decl.loc.end.line !== line) {
-            line += `-${decl.loc.end.line}`;
-        }
+        // eslint-disable-next-line no-param-reassign
+        delete decl.loc.source;
+        // eslint-disable-next-line no-param-reassign
+        delete decl.loc.start.offset;
+        // eslint-disable-next-line no-param-reassign
+        delete decl.loc.end.offset;
 
-        let { column } = decl.loc.start;
-        if (decl.loc.end.column !== column) {
-            column += `-${decl.loc.end.column}`;
-        }
-
-        const declaration = {
+        // Return our own SOM style node.
+        return {
             declaration: value,
-            loc: {
-                line,
-                col: column
-            }
+            loc: decl.loc
         };
-
-        return declaration;
     }
 
+    /**
+     * @private
+     * Transform a CSS Tree key frame node into a querySelector like string.
+     *
+     * @param {object} node The CSS Tree object for this node.
+     * @returns {string} The querySelector like representation of this node.
+     */
     #getKeyFramePrelude(node) {
+        // If this node is simple, use its raw value.
         if (node?.type === 'Raw') {
             return ` ${node.value}`;
         }
 
+        // Complex node, determine the correct type.
         let property = '';
         let current = node?.children.head;
         while (current != null) {
@@ -123,35 +142,48 @@ class CssTreeHelper {
         return property;
     }
 
+    /**
+     * @private
+     * Transform a CSS Tree prelude node into a querySelector like string.
+     *
+     * @param {object} node The CSS Tree object for this node.
+     * @returns {string} The querySelector like representation of this node.
+     */
     #getRulePrelude(node) {
         let selector = '';
-        // console.log(node);
+
+        // Find a valid node to start traversing its linked list.
         let current = node?.children?.head || node?.data?.children?.head || null;
         while (current != null) {
-            // console.log(current);
+            // Recursively build the querySelector like string for this node.
             if (current?.children?.head) {
                 selector += this.#getRulePrelude(current);
             } else if (current?.data?.children) {
                 selector += `, ${this.#getRulePrelude(current)}`;
             } else {
-                switch (current.data.type) {
+                const curNode = current.data;
+                switch (curNode.type) {
+                    case 'AttributeSelector':
+                        console.log(curNode);
+                        selector += `[${curNode.name.name}${curNode.matcher}"${curNode.value?.value}"]`;
+                        break;
                     case 'ClassSelector':
-                        selector += `.${current.data.name}`;
+                        selector += `.${curNode.name}`;
                         break;
                     case 'Combinator':
-                        selector += ` ${current.data.name} `;
+                        selector += ` ${curNode.name} `;
                         break;
                     case 'IdSelector':
-                        selector += `#${current.data.name}`;
+                        selector += `#${curNode.name}`;
                         break;
                     case 'Percentage':
-                        selector += `${current.data.value}%`;
+                        selector += `${curNode.value}%`;
                         break;
                     case 'PseudoClassSelector':
-                        selector += `:${current.data.name}`;
+                        selector += `:${curNode.name}`;
                         break;
                     case 'PseudoElementSelector':
-                        selector += `::${current.data.name}`;
+                        selector += `::${curNode.name}`;
                         break;
                     default:
                         selector += current.data.name;
@@ -160,43 +192,56 @@ class CssTreeHelper {
             current = current.next;
         }
 
-        return selector;
+        return selector.replace(/ {2,}/g, ' ');
     }
 
+    /**
+     * Uses CSS Tree to parse a string of CSS into a AST like tree / linked list.
+     *
+     * @param {string} cssStr A string of CSS code.
+     * @returns {CssSom} The SOM for this provides CSS.
+     */
     parse(cssStr = '') {
+        // Get the CSS Tree
         const ast = CssTree.parse(cssStr, { positions: true });
 
-        const ruleMap = {};
+        // Start building the CSS SOM.
+        const ruleObj = {};
 
+        // Walk the CSS Tree and build our CSS SOM.
         let nodeCount = 1;
-
         CssTree.walk(ast, (node) => {
             if (node.type === 'Atrule') {
-                this.#processAtRule(ruleMap, node, nodeCount);
+                this.#processAtRule(ruleObj, node, nodeCount);
             } else if (node.type === 'Rule') {
-                this.#processRule(ruleMap, node, nodeCount);
+                this.#processRule(ruleObj, node, nodeCount);
             }
             nodeCount += 1;
         });
 
-        const struct = {
-            som: ruleMap,
+        return new CssSom({
+            som: ruleObj,
             src: cssStr
-        };
-
-        // console.log(ruleMap);
-        // console.log(cssStr);
-
-        return new CssSom(struct);
+        });
     }
 
-    #processAtRule(ruleMap, node, nodeCount) {
+    /**
+     * @private
+     * Transform a CSS Tree at (@) node into a querySelector like string.
+     *
+     * @param {object} ruleObj The CSS SOM.
+     * @param {object} node The current CSS Tree node being processed.
+     * @param {int} nodeCount The current node count used to give each node a unique id.
+     */
+    #processAtRule(ruleObj, node, nodeCount) {
+        // Because we process recursively we need to stop recursion from becoming circular.
         if (node.processed) {
             return;
         }
         // eslint-disable-next-line no-param-reassign
         node.processed = true;
 
+        // Build the querySelector like media rule.
         let property = `@${node.name}${this.#getKeyFramePrelude(node.prelude)}`;
         property = property
             .trimEnd()
@@ -204,8 +249,8 @@ class CssTreeHelper {
             .replace(this.#regex.commaAtEnd, '')
             .replace(this.#regex.extraSpaces, ' ');
 
+        // Process the body (children) of this media rule.
         const declarationObj = {};
-
         let current = node?.block?.children?.head;
         while (current != null) {
             if (current.data.type === 'Atrule') {
@@ -216,29 +261,32 @@ class CssTreeHelper {
             current = current.next;
         }
 
-        let { line } = node.loc.start;
-        if (node.loc.end.line !== line) {
-            line += `-${node.loc.end.line}`;
-        }
-
-        let { column } = node.loc.start;
-        if (node.loc.end.column !== column) {
-            column += `-${node.loc.end.column}`;
-        }
+        // eslint-disable-next-line no-param-reassign
+        delete node.loc.source;
+        // eslint-disable-next-line no-param-reassign
+        delete node.loc.start.offset;
+        // eslint-disable-next-line no-param-reassign
+        delete node.loc.end.offset;
 
         const declaration = {
             declaration: declarationObj,
-            loc: {
-                line,
-                col: column
-            }
+            loc: node.loc
         };
 
         // eslint-disable-next-line no-param-reassign
-        ruleMap[`${property} N<${nodeCount}>`] = declaration;
+        ruleObj[`${property} N<${nodeCount}>`] = declaration;
     }
 
-    #processRule(ruleMap, node, nodeCount) {
+    /**
+     * @private
+     * Transform a CSS Tree at node into a querySelector like string.
+     *
+     * @param {object} ruleObj The CSS SOM.
+     * @param {object} node The current CSS Tree node being processed.
+     * @param {int} nodeCount The current node count used to give each node a unique id.
+     */
+    #processRule(ruleObj, node, nodeCount) {
+        // Because we process recursively we need to stop recursion from becoming circular.
         if (node.processed) {
             return;
         }
@@ -258,28 +306,20 @@ class CssTreeHelper {
             return acc;
         }, {});
 
-        let { line } = node.loc.start;
-        if (node.loc.end.line !== line) {
-            line += `-${node.loc.end.line}`;
-        }
-
-        let { column } = node.loc.start;
-        if (node.loc.end.column !== column) {
-            column += `-${node.loc.end.column}`;
-        }
+        // eslint-disable-next-line no-param-reassign
+        delete node.loc.source;
+        // eslint-disable-next-line no-param-reassign
+        delete node.loc.start.offset;
+        // eslint-disable-next-line no-param-reassign
+        delete node.loc.end.offset;
 
         const declaration = {
             declaration: declarationObj,
-            loc: {
-                line,
-                col: column
-            }
+            loc: node.loc
         };
 
-        // console.log(declarations);
-
         // eslint-disable-next-line no-param-reassign
-        ruleMap[`${prelude} N<${nodeCount}>`] = declaration;
+        ruleObj[`${prelude} N<${nodeCount}>`] = declaration;
     }
 
 }

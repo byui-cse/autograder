@@ -77,28 +77,25 @@ class HtmlTreeHelper {
             //     struct.ids.set(key, maps);
             // }
 
-            let line = node.sourceCodeLocation.startLine;
-            if (node.sourceCodeLocation.endLine !== line) {
-                line += `-${node.sourceCodeLocation.endLine}`;
-            }
-
-            let col = node.sourceCodeLocation.startCol;
-            if (node.sourceCodeLocation.endCol !== col) {
-                col += `-${node.sourceCodeLocation.endCol}`;
-            }
-
             // Remove unnecessary location data from the structure we are keeping in memory.
-            // eslint-disable-next-line no-param-reassign
-            delete node.sourceCodeLocation;
 
             // eslint-disable-next-line no-param-reassign
-            node.loc = {
-                line,
-                col
+            const loc = {
+                start: {
+                    line: node.sourceCodeLocation.startLine,
+                    column: node.sourceCodeLocation.startCol
+                },
+                end: {
+                    line: node.sourceCodeLocation.endLine,
+                    column: node.sourceCodeLocation.endCol
+                }
             };
 
+            // eslint-disable-next-line no-param-reassign
+            // delete node.sourceCodeLocation;
+
             maps.set(key, {
-                attrsMap, children, node
+                attrsMap, children, node, loc
             });
         });
 

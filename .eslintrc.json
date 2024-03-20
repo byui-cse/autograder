@@ -33,6 +33,7 @@
             }
         ],
         "max-len": ["warn", { "code": 120 }],
+        "no-continue": "off",
         "no-plusplus": [
             "error",
             {

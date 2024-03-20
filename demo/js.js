@@ -2071,4 +2071,18 @@ try {
 const jsom = JsTreeHelper.parse(advanced);
 // const jsom = JsTreeHelper.parse(statements);
 // console.log(jsom.getStructure());
-console.log(jsom.getValue(jsom.find('class StaticBlockExample')));
+const found = jsom.findAll('class');
+console.log(found);
+// console.log(jsom.getValue(jsom.find('class StaticBlockExample')));
+
+// function trav(obj) {
+//     Object.values(obj).forEach((item) => {
+//         if (item.loc) {
+//             console.log(item.loc);
+//         }
+//         if (item.declaration) {
+//             trav(item.declaration);
+//         }
+//     });
+// }
+// trav(jsom.getStructure().som);

@@ -1,5 +1,4 @@
 import Path from 'path';
-import fetch from 'node-fetch';
 import http from 'http';
 import https from 'https';
 import { URL } from 'url';
@@ -9,7 +8,7 @@ import HtmlTreeHelper from './imports/html/html-tree-helper.js';
 import JsTreeHelper from './imports/js/js-tree-helper.js';
 import Linter from './imports/linter.js';
 import Reporter from './imports/reporter.js';
-import WhatIs from './imports/what-is.js';
+import { WhatIs } from './imports/helpers.js';
 
 import config from './examples/autograde.config.js';
 
@@ -36,6 +35,7 @@ class Autograder {
         const parsedUrl = new URL(url);
         const protocol = parsedUrl.protocol.slice(0, -1).toLowerCase(); // Remove trailing ":"
         const client = protocol === 'https' ? https : http;
+        console.log(client);
 
         // Merge default options with user-provided options
         const defaultOptions = {

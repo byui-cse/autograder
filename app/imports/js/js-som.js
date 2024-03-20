@@ -1,7 +1,10 @@
 /* eslint-disable no-param-reassign */
 
-import WhatIs from '../what-is.js';
+import { GetLines, GetValue, WhatIs } from '../helpers.js';
 
+/**
+ * The Structured Object Model (SOM) for JS.
+ */
 class JsSom {
 
     #struct = {};
@@ -11,27 +14,50 @@ class JsSom {
         this.#struct = struct;
     }
 
+    get src() {
+        return this.#struct.src || '';
+    }
+
+    /**
+     * Search the SOM and find the first node that matches the requested pattern.
+     *
+     * @param {string} str The pattern to search for; querySelector like.
+     * @returns The object for the first matching node or an empty object.
+     */
     find(str) {
         const matches = this.findAll(str);
         if (matches.length > 0) {
             return matches[0];
         }
-        return null;
+        return {};
     }
 
+    /**
+     * Search the SOM and find all the nodes that match the requested pattern.
+     *
+     * @param {string} str - The pattern to search for; querySelector like.
+     * @returns An array of matching node objects or an empty array.
+     */
     findAll(str) {
-        const matches = [];
+        // The search string is querySelector like so break it into it's parts (levels).
         const regex = new RegExp(`\\s+${str}$|^${str}\\s+|\\s+${str}\\s+|\\s+\\w+${str}\\w+\\s+`, 'i');
+
+        // Setup variables we need to track/update as we traverse the SOM.
+        const matches = [];
         const standardized = str.toLowerCase();
+
+        // Start the initial search at the root of the SOM.
         let { som } = this.#struct;
+
+        // See if we can narrow down the search a bit:
         if (standardized.includes('class')) {
-            // console.log('CLASS');
+            // Use the optimized class SOM.
             som = this.#struct.classes;
         } else if (standardized.includes('function')) {
-            // console.log('FUNCTION');
+            // Use the optimized function SOM.
             som = this.#struct.functions;
         } else if (['const', 'let', 'var', 'variable', 'variables'].some((el) => standardized.includes(el))) {
-            // console.log('VARIABLES');
+            // Use the optimized variable SOM.
             som = this.#struct.variables;
         }
 
@@ -40,14 +66,25 @@ class JsSom {
         return matches;
     }
 
+    /**
+     * @private
+     * Search for all the matches at the provided SOM level.
+     *
+     * @param {object} som - The current SOM to search for matches.
+     * @param {RegExp} regex - The pattern to check for.
+     * @param {Array} matches - An array to append matches to.
+     */
     #findAll(som, regex, matches) {
         Object.keys(som).forEach((key) => {
+            // Append all matches to the match array.
             if (regex.test(key)) {
-                const match = {};
-                match[key] = som[key];
-                matches.push(match);
+                matches.push({
+                    key,
+                    value: som[key]
+                });
             }
 
+            // Recursively search (process) child nodes.
             const { children } = som[key];
             if (Object.keys(children).length > 0) {
                 this.#findAll(children, regex, matches);
@@ -55,24 +92,42 @@ class JsSom {
         });
     }
 
+    /**
+     * Get a portion of the original source file.
+     *
+     * @param {string} source - The source file to pull lines from.
+     * @param {int} lineStart - The line to start at.
+     * @param {int} lineEnd - The line to end at.
+     * @param {int} colStart - The column to start at; send 0 for bodies and blocks.
+     * @param {int} colEnd - The column to end at; send 0 for bodies and blocks.
+     * @returns {string} The portion of the source file requested.
+     */
+    getLines(source, lineStart, lineEnd, colStart = 0, colEnd = 0) {
+        return GetLines(source, lineStart, lineEnd, colStart, colEnd);
+    }
+
+    /**
+     * Get the SOM object.
+     *
+     * @returns The SOM object.
+     */
     getStructure() {
         return { ...this.#struct };
     }
 
-    getValue(somNode = null) {
+    getValue(somNode, source = '') {
         if (!somNode) {
             return '';
         }
 
-        const keys = Object.keys(somNode);
-        if (keys.length < 1) {
+        if (!node.key) {
             return '';
         }
 
-        const node = somNode[keys[0]];
+        const node = somNode[somNode.key];
 
-        return this.#struct.getLines(
-            this.#struct.src,
+        return this.getLines(
+            source,
             node.loc.start.line,
             node.loc.end.line,
             0,
@@ -103,5 +158,8 @@ class JsSom {
     }
 
 }
+
+JsSom.prototype.getLines = GetLines;
+JsSom.prototype.getValue = GetValue;
 
 export default JsSom;
