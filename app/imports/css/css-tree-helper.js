@@ -164,7 +164,7 @@ class CssTreeHelper {
                 const curNode = current.data;
                 switch (curNode.type) {
                     case 'AttributeSelector':
-                        console.log(curNode);
+                        // console.log(curNode);
                         selector += `[${curNode.name.name}${curNode.matcher}"${curNode.value?.value}"]`;
                         break;
                     case 'ClassSelector':

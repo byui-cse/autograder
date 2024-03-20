@@ -2,11 +2,21 @@ const verifyHeadExists = (som, reportObj, reporter) => {
     const head = som.find('head');
 
     if (head) {
+        let { line } = head.value.loc.start;
+        if (head.value.loc.end.line !== line) {
+            line = `${line}-${head.value.loc.end.line}`;
+        }
+
+        let { col } = head.value.loc.start;
+        if (head.value.loc.end.col !== col) {
+            col = `${col}-${head.value.loc.end.col}`;
+        }
+
         const notice = reporter.makeReport(
             'Good job your file includes a head tag.',
             'must-include-head-tag',
-            head.node.loc.line,
-            head.node.loc.col
+            line,
+            col
         );
 
         reportObj.notice.push(notice);

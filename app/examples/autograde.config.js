@@ -1,17 +1,7 @@
-import CSS from './css.js';
-import HTML from './html.js';
-import JS from './js.js';
+import Combined from './combined.js';
 
 export default (autograder) => {
-    CSS().forEach((test) => {
-        autograder.registerCssTest(test);
-    });
-
-    HTML().forEach((test) => {
-        autograder.registerHtmlTest(test);
-    });
-
-    JS().forEach((test) => {
-        autograder.registerJsTest(test);
-    });
+    autograder.registerTests(Combined.CSS);
+    autograder.registerTests(Combined.HTML);
+    autograder.registerTests(Combined.JS);
 };

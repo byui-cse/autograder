@@ -432,7 +432,7 @@ const struct = c.getStructure();
 delete struct.src;
 // console.log(struct.src);
 // console.log(struct.som['body N<2>'].declaration.color);
-const print = c.findAll('.test');
+const print = c.findAll('@media');
 console.log(print);
 // print.forEach((node) => {
 //     console.log(node[node.key].loc);

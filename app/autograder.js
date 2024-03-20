@@ -35,7 +35,7 @@ class Autograder {
         const parsedUrl = new URL(url);
         const protocol = parsedUrl.protocol.slice(0, -1).toLowerCase(); // Remove trailing ":"
         const client = protocol === 'https' ? https : http;
-        console.log(client);
+        // console.log(client);
 
         // Merge default options with user-provided options
         const defaultOptions = {
@@ -134,6 +134,38 @@ class Autograder {
         combinedReport.src = source;
 
         return combinedReport;
+    }
+
+    registerTests(testObj) {
+        if (WhatIs(testObj) !== 'object') {
+            return;
+        }
+
+        if (!testObj.type || !testObj.tests) {
+            return;
+        }
+
+        if (WhatIs(testObj.tests) !== 'array') {
+            return;
+        }
+
+        switch (testObj.type.trim().toUpperCase()) {
+            case 'CSS':
+                testObj.tests.forEach((test) => {
+                    this.registerCssTest(test);
+                });
+                break;
+            case 'HTML':
+                testObj.tests.forEach((test) => {
+                    this.registerHtmlTest(test);
+                });
+                break;
+            case 'JS':
+                testObj.tests.forEach((test) => {
+                    this.registerJsTest(test);
+                });
+                break;
+        }
     }
 
     registerCssTest(callback) {

@@ -88,6 +88,26 @@ p {
 
 }
 
+@media only print and (max-width: 600px) {
+    nav {
+      flex-direction: column;
+    }
+
+    div {
+        list-style: none;
+    }
+    
+    header {
+      padding: 10px;
+    }
+}
+
+@media (min-width: 30em) and (max-width: 50em) {
+    div {
+        list-style: none;
+    }
+}
+
 .modal {
     display: none;
 }

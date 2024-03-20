@@ -25,8 +25,7 @@ const mediaForPrinting = (som, reportObj, reporter) => {
 
     for (let i = 0; i < mediaTags.length; i++) {
         const node = mediaTags[i];
-        const key = Object.keys(node)[0];
-        if (key.includes('print')) {
+        if (node.key.includes('print')) {
             return;
         }
     }
