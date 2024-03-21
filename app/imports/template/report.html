@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report</title>
+    <!-- Include the Roboto font from Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <!-- Include Highlight JS library and line number extension -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlightjs-line-numbers.js/2.8.0/highlightjs-line-numbers.min.js"></script>
+    <!-- Turn on the lights for code blocks -->
+    <script>hljs.highlightAll(); hljs.initLineNumbersOnLoad({singleLine: true});</script>
+    <!-- Style the page -->
+    <style>
+        html {
+            font-size: 62.5%;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-size: 1.6rem;
+            font-family: "Roboto", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+        }
+        header, main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        header {
+            display: flex;
+            flex-direction: column;
+        }
+        header .tile {
+            margin-bottom: 1.5rem;
+        }
+        header .tile .title {
+            font-weight: bold;
+            font-size: 2.5rem;
+        }
+        header .tile .content {
+            position: relative;
+            font-size: 2rem;
+            padding: 2.5rem;
+        }
+        header .tile:first-of-type .content {
+            position: relative;
+            font-size: 2rem;
+            padding: 0;
+            word-break: break-all;
+        }
+        header .tile .content::before {
+            content: ' ';
+            border: 1px solid black;
+            display: block;
+            width: 6rem;
+            height: 5rem;
+            position: absolute;
+            left: 0px;
+            top: 1rem;
+        }
+        header .tile:first-of-type .content::before {
+            content: none;
+        }
+        section {
+            margin: 4rem 0;
+        }
+        section:first-of-type {
+            margin: 0;
+        }
+        section h1 {
+            background-color: #316db0;
+            color: #ffffff;
+            border: 1px solid #4c7aae;
+            padding: 1rem 2rem;
+            margin: 2rem -2rem;
+            font-size: 2.4rem;
+            line-height: 3.4rem;
+        }
+        section pre code.hljs {
+            margin: 0;
+            padding: 0;
+        }
+        section pre code.hljs {
+            border: 1px solid #8e8e8e;
+        }
+        section pre code.hljs td.hljs-ln-numbers {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            text-align: right;
+            vertical-align: top;
+            padding: 2px 5px;
+            border-right: 1px solid #8e8e8e;
+        }
+        section pre code.hljs td.hljs-ln-code {
+            padding: 1px 5px;
+        }
+        section .report-title {
+            font-weight: bold;
+            font-size: 2rem;
+            margin: 4rem 0 2rem 0;
+        }
+        section .report {
+            position: relative;
+            padding: 0.75rem 1.25rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: 0.25rem;
+        }
+        section .report .rule {
+            font-weight: bold;
+            padding-bottom: 0.5rem;
+        }
+        .toggle .content {
+            display: none;
+        }
+        .toggle .title {
+            display: block;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 2rem;
+            padding: 1rem;
+            background-color: #f7f7f7;
+            border: 1px solid #d5d5d5;
+        }
+        .toggle .title .icon {
+            position: absolute;
+            right: 0;
+            width: 2.5rem;
+        }
+        .toggle .title .close {
+            float: right;
+            position: relative;
+            display: none;
+        }
+        .toggle .title .open {
+            float: right;
+            position: relative;
+            display: block;
+        }
+        .toggle .toggle-checkbox {
+            display: none;
+        }
+        .toggle .toggle-checkbox:checked + .title + .content {
+            display: block;
+        }
+        .toggle .toggle-checkbox:checked + .title .close {
+            display: block;
+        }
+        .toggle .toggle-checkbox:checked + .title .open {
+            display: none;
+        }
+        header .tile.notice .content::before, section .report.notice {
+            z-index: -1;
+            color: #0c5460;
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+        }
+        header .tile.error .content::before, section .report.error {
+            z-index: -1;
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        header .tile.warning .content::before, section .report.warning {
+            z-index: -1;
+            color: #856404;
+            background-color: #fff3cd;
+            border-color: #ffeeba;
+        }
+        @media (min-width: 770px) {
+            header {
+                flex-direction: row;
+            }
+            header .tile {
+                display: grid;
+                margin: 1.25rem;
+            }
+            header .tile:first-of-type {
+                margin-left: 0;
+                flex: 1;
+            }
+            header .tile:last-of-type {
+                margin-right: 0;
+            }
+            header .tile .title, header .tile .content {
+                text-align: center;
+            }
+            header .tile:first-of-type .title, header .tile:first-of-type .content {
+                text-align: left;
+            }
+            header .tile .content::before {
+                content: ' ';
+                border: 1px solid;
+                display: block;
+                width: 6rem;
+                height: 5rem;
+                position: absolute;
+                left: calc(50% - 3rem);
+                top: 1rem
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="tile">
+            <div class="title">
+                File{{FILES_PLURAL}} Reviewed
+            </div>
+            <div class="content">
+                <ol>{{FILES_LIST}}</ol>
+            </div>
+        </div>
+        <div class="tile notice">
+            <div class="title">
+                Total Notices
+            </div>
+            <div class="content">
+                {{TOTAL_NOTICES}}
+            </div>
+        </div>
+        <div class="tile warning">
+            <div class="title">
+                Total Warnings
+            </div>
+            <div class="content">
+                {{TOTAL_WARNINGS}}
+            </div>
+        </div>
+        <div class="tile error">
+            <div class="title">
+                Total Errors
+            </div>
+            <div class="content">
+                {{TOTAL_ERRORS}}
+            </div>
+        </div>
+    </header>
+    <main>
+        {{BODY}}
+    </main>
+</body>
+</html>

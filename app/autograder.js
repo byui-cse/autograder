@@ -30,7 +30,7 @@ class Autograder {
         this.#linter = new Linter();
     }
 
-    async fetchUrl(url, options = {}) {
+    async #fetchUrl(url, options = {}) {
         // Normalize URL and handle both HTTP and HTTPS
         const parsedUrl = new URL(url);
         const protocol = parsedUrl.protocol.slice(0, -1).toLowerCase(); // Remove trailing ":"
@@ -75,6 +75,10 @@ class Autograder {
         });
     }
 
+    getHtmlReport(reports) {
+        return Reporter.makeHtmlReport(reports);
+    }
+
     async processFileByUrl(url) {
         const urlObj = new URL(url);
         const ext = Path.extname(urlObj.pathname).replace('.', '') || 'html';
@@ -84,7 +88,7 @@ class Autograder {
             return false;
         }
 
-        const response = await this.fetchUrl(url);
+        const response = await this.#fetchUrl(url);
         const source = response.toString();
 
         // Get linter reports.
@@ -131,6 +135,9 @@ class Autograder {
         combinedReport.error = [...linterReport.error, ...codeReport.error];
         combinedReport.notice = [...linterReport.notice, ...codeReport.notice];
         combinedReport.warning = [...linterReport.warning, ...codeReport.warning];
+        combinedReport.ext = Path.extname(url).substring(1);
+        combinedReport.file = url;
+        combinedReport.name = Path.basename(url);
         combinedReport.src = source;
 
         return combinedReport;
