@@ -14,8 +14,6 @@ const { APPDIR } = getPaths();
  */
 class Linter {
 
-    #disableJsImportsAndRequireChecks = true;
-
     #rules = {
         css: {
             rules: {}
@@ -34,24 +32,41 @@ class Linter {
         }
     };
 
+    #useDefaultRules = false;
+
     /**
      * Creates an instance of Reporter.
      *
-     * @param {object} cssRules - Custom StyleLint configuration and rules.
-     * @param {object} htmlRules - Custom HTMLHint rules.
-     * @param {object} jsConfig - Custom ESLint configuration and rules.
+     * @param {object} options A configuration with any combination of the following:
+     *                         - Custom StyleLint configuration and rules.
+     *                         - Custom HTMLHint rules.
+     *                         - Custom ESLint configuration and rules.
      */
-    constructor(cssRules = {}, htmlRules = {}, jsConfig = {}) {
-        this.#loadCssConfig(cssRules);
-        this.#loadHtmlConfig(htmlRules);
-        this.#loadJsConfig(jsConfig);
+    constructor(options = {}, useDefaultLintRules = false) {
+        this.#useDefaultRules = useDefaultLintRules;
+
+        if (!options.cssConfig) {
+            // eslint-disable-next-line no-param-reassign
+            options.cssConfig = {};
+        }
+        if (!options.htmlConfig) {
+            // eslint-disable-next-line no-param-reassign
+            options.htmlConfig = {};
+        }
+        if (!options.jsConfig) {
+            // eslint-disable-next-line no-param-reassign
+            options.jsConfig = {};
+        }
+        this.#loadCssConfig(options.cssConfig);
+        this.#loadHtmlConfig(options.htmlConfig);
+        this.#loadJsConfig(options.jsConfig);
     }
 
     /**
      * @private
      * Private method to load a JSON configuration file.
      *
-     * @param {string} config - Path to the configuration file.
+     * @param {string} config Path to the configuration file.
      * @returns {object} Parsed JSON configuration object.
      */
     #loadConfigFile(config) {
@@ -76,11 +91,15 @@ class Linter {
      * @private
      * Private method to load StyleLint rules from either a user supplied object or a configuration file.
      *
-     * @param {object} config - Custom StyleLint configuration and rules.
+     * @param {object} config Custom StyleLint configuration and rules.
      */
     #loadCssConfig(config) {
         if (this.#verifyRuleObject(config)) {
             this.#rules.css = config;
+            return;
+        }
+
+        if (!this.#useDefaultRules) {
             return;
         }
 
@@ -92,11 +111,15 @@ class Linter {
      * @private
      * Private method to load HTMLHint rules from either a user supplied object or a configuration file.
      *
-     * @param {object} config - Custom HTMLHint rules.
+     * @param {object} config Custom HTMLHint rules.
      */
     #loadHtmlConfig(config) {
         if (this.#verifyRuleObject(config)) {
             this.#rules.html = config;
+            return;
+        }
+
+        if (!this.#useDefaultRules) {
             return;
         }
 
@@ -108,23 +131,45 @@ class Linter {
      * @private
      * Private method to load ESLint configuration from either a user supplied object or a configuration file.
      *
-     * @param {object} config - Custom ESLint configuration.
+     * @param {object} config Custom ESLint configuration.
      */
     #loadJsConfig(config) {
+        const forceBasicRequiredSettings = (configObj) => {
+            if (!configObj.env) {
+                // eslint-disable-next-line no-param-reassign
+                configObj.env = {
+                    browser: true
+                };
+            }
+            if (!configObj.parserOptions) {
+                // eslint-disable-next-line no-param-reassign
+                configObj.parserOptions = {
+                    ecmaVersion: 'latest'
+                };
+            }
+        };
+
         if (this.#verifyRuleObject(config)) {
+            forceBasicRequiredSettings(config);
             this.#rules.js = config;
             return;
         }
 
+        if (!this.#useDefaultRules) {
+            return;
+        }
+
         const json = Path.join(APPDIR, 'configs', 'js-linter.json');
-        this.#rules.js = this.#loadConfigFile(json);
+        const defaultConfig = this.#loadConfigFile(json);
+        forceBasicRequiredSettings(config);
+        this.#rules.js = defaultConfig;
     }
 
     /**
      * Asynchronously lints CSS code and generates a report.
      *
-     * @param {string} css - CSS code to be linted.
-     * @param {object} rules - Custom CSS linting rules.
+     * @param {string} css CSS code to be linted.
+     * @param {object} rules Custom CSS linting rules.
      * @returns {Promise<object>} A promise resolving to the linting report object.
      */
     async lintCSS(css, rules = {}) {
@@ -189,8 +234,8 @@ class Linter {
     /**
      * Asynchronously lints HTML code and generates a report.
      *
-     * @param {string} html - HTML code to be linted.
-     * @param {object} config - HTMLHint rules.
+     * @param {string} html HTML code to be linted.
+     * @param {object} config HTMLHint rules.
      * @returns {Promise<object>} A promise resolving to the linting report object.
      */
     async lintHTML(html, config = {}) {
@@ -202,10 +247,11 @@ class Linter {
         const report = Reporter.getReportsObject();
 
         HTMLHint.verify(html, config.rules).forEach((item) => {
+            // NOTE: If we ever use item.message or item.raw we must also replace the < and > symbols.
             const { col } = item;
             const { line } = item;
             const rule = item.rule.id;
-            const text = item.rule.description;
+            const text = item.rule.description.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
             const results = Reporter.makeReport(text, rule, line, col);
 
@@ -227,8 +273,8 @@ class Linter {
     /**
      * Asynchronously lints JS code and generates a report.
      *
-     * @param {string} js - JS code to be linted.
-     * @param {object} config - Custom ESLint configuration and rules.
+     * @param {string} js JS code to be linted.
+     * @param {object} config Custom ESLint configuration and rules.
      * @returns {Promise<object>} A promise resolving to the linting report object.
      */
     async lintJS(js, config = {}) {
@@ -303,11 +349,56 @@ class Linter {
         return report;
     }
 
+    registercssConfig(obj = {}) {
+        if (WhatIs(obj) !== 'object') {
+            return;
+        }
+
+        if (obj.rules) {
+            this.#rules.css.rules = obj.rules;
+            return;
+        }
+
+        if (Object.keys(obj).length > 0) {
+            this.#rules.css.rules = obj;
+        }
+    }
+
+    registerhtmlConfig(obj = {}) {
+        if (WhatIs(obj) !== 'object') {
+            return;
+        }
+
+        if (obj.rules) {
+            this.#rules.html.rules = obj.rules;
+            return;
+        }
+
+        if (Object.keys(obj).length > 0) {
+            this.#rules.html.rules = obj;
+        }
+    }
+
+    registerJsRules(obj = {}) {
+        if (WhatIs(obj) !== 'object') {
+            return;
+        }
+
+        if (obj.rules) {
+            this.#rules.js.rules = obj.rules;
+        }
+
+        // The JS Linter needs/allows additional configuration so support that here.
+        Object.keys(obj).forEach((key) => {
+            this.#rules.js[key] = obj[key];
+        });
+    }
+
     /**
      * @private
      * Private method to verify if an object is a valid rule object.
      *
-     * @param {object} obj - Object to be verified.
+     * @param {object} obj Object to be verified.
      * @returns {boolean} True if the object is a valid rule object, otherwise false.
      */
     #verifyRuleObject(obj) {

@@ -190,7 +190,7 @@ class CssSom {
                 continue;
             }
 
-            // Add a comma to the pattern; we will split on these to determine or SOM levels later.
+            // Add a comma to the pattern; we will split on these to determine our SOM levels later.
             result = `${result.slice(0, match.index + replacements)}, ${result.slice(match.index + 1 + replacements)}`;
             replacements += 1;
         }

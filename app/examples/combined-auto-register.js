@@ -1,9 +1,9 @@
 /**
  * This is an example of combining all custom tests into a single file and
- * exporting an object of testing objects that the user will then need to
- * register individually with Autograder.registerTests()
+ * exporting a registration function that will auto register all these tests
+ * when you call the exported function with an instance of the Autograder.
  *
- * This is the second most compact way to provide custom tests to the Autograder.
+ * This is the most compact way to provide custom tests to the Autograder.
  */
 
 /**
@@ -177,24 +177,27 @@ const shapeClassMustExist = (som, reportObj, reporter) => {
 };
 
 /**
- * EXPORT ALL TESTS AS TESTING OBJECTS
+ * AUTO REGISTER THESE TESTS VIA EXPORT.
  *
- * NOTE: A "testing object" consists of a type and an array of tests. We place
- * each testing object at a key representing the language the testing object is
- * for to simplify the processes of registering the tests later.
+ * The user will need to pass in their instance of the Autograder for this to work.
  */
 
-export default {
-    css: {
+export default (autograder) => {
+    // Register css tests.
+    autograder.registerTests({
         type: 'css',
         tests: [onlyThreeMediaTags, mediaForPrinting]
-    },
-    html: {
+    });
+
+    // Register html tests.
+    autograder.registerTests({
         type: 'html',
         tests: [verifyHeadExists, verifyHeadContainsDescription, verifyHeadContainsViewportMeta]
-    },
-    js: {
+    });
+
+    // Register js tests.
+    autograder.registerTests({
         type: 'js',
         tests: [noVarDeclarations, shapeClassMustExist]
-    }
+    });
 };

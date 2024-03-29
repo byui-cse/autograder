@@ -34,29 +34,39 @@
             margin: 0 auto;
             padding: 2rem;
         }
-        header {
+        header #main-title {
+            font-weight: bold;
+            font-size: 4rem;
+            line-height: 4rem;
+        }
+        header #main-description {
+            font-size: 2rem;
+            line-height: 2.5rem;
+            margin-bottom: 5rem;
+        }
+        header #stats {
             display: flex;
             flex-direction: column;
         }
-        header .tile {
+        header #stats .tile {
             margin-bottom: 1.5rem;
         }
-        header .tile .title {
+        header #stats .tile .title {
             font-weight: bold;
             font-size: 2.5rem;
         }
-        header .tile .content {
+        header #stats .tile .content {
             position: relative;
             font-size: 2rem;
             padding: 2.5rem;
         }
-        header .tile:first-of-type .content {
+        header #stats .tile:first-of-type .content {
             position: relative;
             font-size: 2rem;
             padding: 0;
             word-break: break-all;
         }
-        header .tile .content::before {
+        header #stats .tile .content::before {
             content: ' ';
             border: 1px solid black;
             display: block;
@@ -66,7 +76,7 @@
             left: 0px;
             top: 1rem;
         }
-        header .tile:first-of-type .content::before {
+        header #stats .tile:first-of-type .content::before {
             content: none;
         }
         section {
@@ -112,6 +122,9 @@
             margin: 4rem 0 2rem 0;
         }
         section .report {
+            display: grid;
+            grid-template-rows: auto auto;
+            grid-template-columns: 1fr 1fr;
             position: relative;
             padding: 0.75rem 1.25rem;
             margin-bottom: 1rem;
@@ -119,8 +132,22 @@
             border-radius: 0.25rem;
         }
         section .report .rule {
+            grid-row: 1;
+            grid-column: 1/2;
             font-weight: bold;
             padding-bottom: 0.5rem;
+        }
+        section .report .location {
+            grid-row: 1;
+            grid-column: 2/3;
+            text-align: right;
+        }
+        section .report .location span {
+            font-weight: bold;
+        }
+        section .report .message {
+            grid-row: 2;
+            grid-column: 1/3;
         }
         .toggle .content {
             display: none;
@@ -161,46 +188,46 @@
         .toggle .toggle-checkbox:checked + .title .open {
             display: none;
         }
-        header .tile.notice .content::before, section .report.notice {
+        header #stats .tile.notice .content::before, section .report.notice {
             z-index: -1;
             color: #0c5460;
             background-color: #d1ecf1;
             border-color: #bee5eb;
         }
-        header .tile.error .content::before, section .report.error {
+        header #stats .tile.error .content::before, section .report.error {
             z-index: -1;
             color: #721c24;
             background-color: #f8d7da;
             border-color: #f5c6cb;
         }
-        header .tile.warning .content::before, section .report.warning {
+        header #stats .tile.warning .content::before, section .report.warning {
             z-index: -1;
             color: #856404;
             background-color: #fff3cd;
             border-color: #ffeeba;
         }
         @media (min-width: 770px) {
-            header {
+            header #stats {
                 flex-direction: row;
             }
-            header .tile {
+            header #stats .tile {
                 display: grid;
                 margin: 1.25rem;
             }
-            header .tile:first-of-type {
+            header #stats .tile:first-of-type {
                 margin-left: 0;
                 flex: 1;
             }
-            header .tile:last-of-type {
+            header #stats .tile:last-of-type {
                 margin-right: 0;
             }
-            header .tile .title, header .tile .content {
+            header #stats .tile .title, header #stats .tile .content {
                 text-align: center;
             }
-            header .tile:first-of-type .title, header .tile:first-of-type .content {
+            header #stats .tile:first-of-type .title, header #stats .tile:first-of-type .content {
                 text-align: left;
             }
-            header .tile .content::before {
+            header #stats .tile .content::before {
                 content: ' ';
                 border: 1px solid;
                 display: block;
@@ -215,36 +242,39 @@
 </head>
 <body>
     <header>
-        <div class="tile">
-            <div class="title">
-                File{{FILES_PLURAL}} Reviewed
+        {{TITLE_AND_DESCRIPTION}}
+        <div id="stats">
+            <div class="tile">
+                <div class="title">
+                    File{{FILES_PLURAL}} Reviewed
+                </div>
+                <div class="content">
+                    <ol>{{FILES_LIST}}</ol>
+                </div>
             </div>
-            <div class="content">
-                <ol>{{FILES_LIST}}</ol>
+            <div class="tile notice">
+                <div class="title">
+                    Total Notices
+                </div>
+                <div class="content">
+                    {{TOTAL_NOTICES}}
+                </div>
             </div>
-        </div>
-        <div class="tile notice">
-            <div class="title">
-                Total Notices
+            <div class="tile warning">
+                <div class="title">
+                    Total Warnings
+                </div>
+                <div class="content">
+                    {{TOTAL_WARNINGS}}
+                </div>
             </div>
-            <div class="content">
-                {{TOTAL_NOTICES}}
-            </div>
-        </div>
-        <div class="tile warning">
-            <div class="title">
-                Total Warnings
-            </div>
-            <div class="content">
-                {{TOTAL_WARNINGS}}
-            </div>
-        </div>
-        <div class="tile error">
-            <div class="title">
-                Total Errors
-            </div>
-            <div class="content">
-                {{TOTAL_ERRORS}}
+            <div class="tile error">
+                <div class="title">
+                    Total Errors
+                </div>
+                <div class="content">
+                    {{TOTAL_ERRORS}}
+                </div>
             </div>
         </div>
     </header>

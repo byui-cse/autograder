@@ -13,8 +13,6 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.25.2"
   },
-  "scripts": {
-    "demo": "node ./demo/autograder.js"
-  },
+  "scripts": {},
   "type": "module"
 }

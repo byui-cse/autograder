@@ -1,5 +1,6 @@
 import Fs from 'fs';
-import Path from 'path';
+import Path, { sep } from 'path';
+import Print from './print.js';
 import RootPaths from '../paths.js';
 import { WhatIs } from './helpers.js';
 
@@ -35,8 +36,18 @@ class Reporter {
         }
         let html = `<div class="report-title">Error${plural}</div>`;
         errors.forEach((error) => {
+            let loc = '';
+            if (error.line !== 0) {
+                loc += `<span>Line:</span> ${error.line}`;
+
+                if (error.col !== 0) {
+                    loc += `&nbsp;&nbsp;&nbsp;&nbsp;<span>Column:</span> ${error.col}`;
+                }
+            }
+
             html += `<div class="report error">
                 <div class="rule">${error.rule}</div>
+                <div class="location">${loc}</div>
                 <div class="message">${error.text}</div>
             </div>`;
         });
@@ -54,8 +65,18 @@ class Reporter {
         }
         let html = `<div class="report-title">Notice${plural}</div>`;
         notices.forEach((notice) => {
+            let loc = '';
+            if (notice.line !== 0) {
+                loc += `<span>Line:</span> ${notice.line}`;
+
+                if (notice.col !== 0) {
+                    loc += `&nbsp;&nbsp;&nbsp;&nbsp;<span>Column:</span> ${notice.col}`;
+                }
+            }
+
             html += `<div class="report notice">
                 <div class="rule">${notice.rule}</div>
+                <div class="location">${loc}</div>
                 <div class="message">${notice.text}</div>
             </div>`;
         });
@@ -73,8 +94,18 @@ class Reporter {
         }
         let html = `<div class="report-title">Warning${plural}</div>`;
         warnings.forEach((warning) => {
+            let loc = '';
+            if (warning.line !== 0) {
+                loc += `<span>Line:</span> ${warning.line}`;
+
+                if (warning.col !== 0) {
+                    loc += `&nbsp;&nbsp;&nbsp;&nbsp;<span>Column:</span> ${warning.col}`;
+                }
+            }
+
             html += `<div class="report warning">
                 <div class="rule">${warning.rule}</div>
+                <div class="location">${loc}</div>
                 <div class="message">${warning.text}</div>
             </div>`;
         });
@@ -113,7 +144,7 @@ class Reporter {
         };
     }
 
-    makeHtmlReport(reports) {
+    makeHtmlReport(reports, title = '', description = '') {
         const template = this.#reportTemplate;
 
         const replacements = {
@@ -126,7 +157,7 @@ class Reporter {
         };
 
         if (WhatIs(reports) !== 'array') {
-            return this.#makeTemplateReplacements(template, replacements);
+            return this.#makeTemplateReplacements(template, replacements, title, description);
         }
 
         if (reports.length > 1) {
@@ -176,11 +207,20 @@ class Reporter {
 
         replacements.body = body;
 
-        return this.#makeTemplateReplacements(template, replacements);
+        return this.#makeTemplateReplacements(template, replacements, title, description);
     }
 
-    #makeTemplateReplacements(template, replacements) {
+    #makeTemplateReplacements(template, replacements, title, description) {
         let output = template;
+
+        let titleAndDescription = '';
+        if (title) {
+            titleAndDescription += `<h1 id="main-title">${title}</h1>`;
+        }
+        if (description) {
+            titleAndDescription += `<div id="main-description">${description}</div>`;
+        }
+        output = output.replace('{{TITLE_AND_DESCRIPTION}}', titleAndDescription);
 
         let fileList = '';
         replacements.files.forEach((file, index) => {
@@ -202,37 +242,58 @@ class Reporter {
         return output;
     }
 
-    /**
-     * Deep merge two objects together keeping unique keys from each object.
-     *
-     * @param {object} mergeIntoObj - The object to merge another object into.
-     * @param {object} mergeAndPrioritizeObj - The object to merge into mergeIntoObject. This object
-     * has priority when collisions occur.
-     * @returns
-     */
-    deepMerge(mergeIntoObj, mergeAndPrioritizeObj) {
+    printReportToConsole(reports, title = '', description = '') {
+        if (title) {
+            Print.info(`\n[ ${title} ]`);
+        }
 
-        const isPlainObject = (value) => value && typeof value === 'object' && value.constructor === Object;
+        if (description) {
+            Print.info(`${description}\n`);
+        }
 
-        // Recursively merge plain objects and arrays.
-        const merge = (a, b) => {
-            for (const key in b) {
-                if (isPlainObject(a[key]) && isPlainObject(b[key])) {
-                    merge(a[key], b[key]);
-                } else {
-                    // eslint-disable-next-line no-param-reassign
-                    a[key] = b[key];
+        reports.forEach((report) => {
+            Print.info(`${report.ext}: ${report.file}`);
+            Print.info(`${'='.repeat(report.ext.length + report.file.length + 2)}\n`);
+
+            if (report.notice.length > 0) {
+                let plural = '';
+                if (report.notice.length > 1) {
+                    plural = 's';
                 }
+                Print.notice(`Notice${plural}:\n`);
+
+                report.notice.forEach((notice) => {
+                    Print.notice(`${notice.rule} (Line: ${notice.line}, Column: ${notice.col})`);
+                    Print.notice(`> ${notice.text}\n`);
+                });
             }
-        };
 
-        // Clone first object to target.
-        const merged = { ...mergeIntoObj };
+            if (report.warning.length > 0) {
+                let plural = '';
+                if (report.warning.length > 1) {
+                    plural = 's';
+                }
+                Print.warn(`Warning${plural}:\n`);
 
-        // Merge objects recursively.
-        merge(merged, mergeAndPrioritizeObj);
+                report.warning.forEach((warning) => {
+                    Print.warn(`${warning.rule} (Line: ${warning.line}, Column: ${warning.col})`);
+                    Print.warn(`> ${warning.text}\n`);
+                });
+            }
 
-        return merged;
+            if (report.error.length > 0) {
+                let plural = '';
+                if (report.error.length > 1) {
+                    plural = 's';
+                }
+                Print.error(`Error${plural}:\n`);
+
+                report.error.forEach((error) => {
+                    Print.error(`${error.rule} (Line: ${error.line}, Column: ${error.col})`);
+                    Print.error(`> ${error.text}\n`);
+                });
+            }
+        });
     }
 
 }
