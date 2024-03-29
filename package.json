@@ -14,5 +14,24 @@
     "eslint-plugin-import": "^2.25.2"
   },
   "scripts": {},
-  "type": "module"
+  "type": "module",
+  "name": "@byui-cse/autograder",
+  "description": "An automated code review tool for programming assignments.",
+  "version": "0.0.2",
+  "main": "app/autograder.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/byui-cse/autograder.git"
+  },
+  "keywords": [
+    "auto",
+    "grader",
+    "coding"
+  ],
+  "author": "Christopher Keers",
+  "license": "Commons Clause",
+  "bugs": {
+    "url": "https://github.com/byui-cse/autograder/issues"
+  },
+  "homepage": "https://github.com/byui-cse/autograder#readme"
 }
