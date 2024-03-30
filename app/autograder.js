@@ -302,8 +302,8 @@ class Autograder {
         this.#tests.css.push(callback);
     }
 
-    registerCssLinterRules(obj = {}) {
-        this.#linter.registerCssRules(obj);
+    registerCssLinterConfig(obj = {}) {
+        this.#linter.registerCssConfig(obj);
     }
 
     registerHtmlTest(callback) {
@@ -313,8 +313,8 @@ class Autograder {
         this.#tests.html.push(callback);
     }
 
-    registerHtmlLinterRules(obj = {}) {
-        this.#linter.registerHtmlRules(obj);
+    registerHtmlLinterConfig(obj = {}) {
+        this.#linter.registerHtmlConfig(obj);
     }
 
     registerJsTest(callback) {
@@ -324,8 +324,8 @@ class Autograder {
         this.#tests.js.push(callback);
     }
 
-    registerJsLinterRules(obj = {}) {
-        this.#linter.registerJsRules(obj);
+    registerJsLinterConfig(obj = {}) {
+        this.#linter.registerJsConfig(obj);
     }
 
 }

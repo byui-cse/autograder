@@ -4,10 +4,10 @@ import Stylelint from 'stylelint';
 import { ESLint } from 'eslint';
 import { HTMLHint } from 'htmlhint';
 import Reporter from './reporter.js';
+import GetRootPaths from '../paths.js';
 import { WhatIs } from './helpers.js';
-import getPaths from '../paths.js';
 
-const { APPDIR } = getPaths();
+const { APPDIR } = GetRootPaths();
 
 /**
  * Class representing a reporter for linting CSS, HTML, and JS files.
@@ -345,50 +345,49 @@ class Linter {
         });
 
         report.src = js;
-
         return report;
     }
 
-    registercssConfig(obj = {}) {
+    /**
+     * Register Stylelint configurations and rules with the Linter.
+     *
+     * @param {object} obj A Stylelint configuration object for linting CSS code.
+     */
+    registerCssConfig(obj = {}) {
         if (WhatIs(obj) !== 'object') {
             return;
         }
 
-        if (obj.rules) {
-            this.#rules.css.rules = obj.rules;
-            return;
-        }
-
-        if (Object.keys(obj).length > 0) {
-            this.#rules.css.rules = obj;
-        }
+        Object.keys(obj).forEach((key) => {
+            this.#rules.css[key] = obj[key];
+        });
     }
 
-    registerhtmlConfig(obj = {}) {
+    /**
+     * Register HTMLHint configurations and rules with the Linter.
+     *
+     * @param {object} obj A Parse5 configuration object for linting HTML code.
+     */
+    registerHtmlConfig(obj = {}) {
         if (WhatIs(obj) !== 'object') {
             return;
         }
 
-        if (obj.rules) {
-            this.#rules.html.rules = obj.rules;
-            return;
-        }
-
-        if (Object.keys(obj).length > 0) {
-            this.#rules.html.rules = obj;
-        }
+        Object.keys(obj).forEach((key) => {
+            this.#rules.html[key] = obj[key];
+        });
     }
 
-    registerJsRules(obj = {}) {
+    /**
+     * Register ESLint configurations and rules with the Linter.
+     *
+     * @param {object} obj A Stylelint configuration object for linting JS code.
+     */
+    registerJsConfig(obj = {}) {
         if (WhatIs(obj) !== 'object') {
             return;
         }
 
-        if (obj.rules) {
-            this.#rules.js.rules = obj.rules;
-        }
-
-        // The JS Linter needs/allows additional configuration so support that here.
         Object.keys(obj).forEach((key) => {
             this.#rules.js[key] = obj[key];
         });

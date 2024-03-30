@@ -1,10 +1,10 @@
 import Fs from 'fs';
-import Path, { sep } from 'path';
+import Path from 'path';
+import GetRootPaths from '../paths.js';
 import Print from './print.js';
-import RootPaths from '../paths.js';
 import { WhatIs } from './helpers.js';
 
-const { APPDIR } = RootPaths();
+const { APPDIR } = GetRootPaths();
 
 class Reporter {
 
@@ -21,10 +21,22 @@ class Reporter {
         this.#reportTemplate = Fs.readFileSync(Path.join(APPDIR, 'imports', 'template', 'report.html')).toString();
     }
 
+    /**
+     * Generate a uniquely safe random id that can be used as HTML ids.
+     *
+     * @returns An HTML safe uniquely random id.
+     */
     generateUniqueId() {
         return `_${Math.random().toString(36).slice(2, 11)}`;
     }
 
+    /**
+     * @private
+     * Transforms Autograder error objects into their HTML representations.
+     *
+     * @param {Array} errors An array of error report objects.
+     * @returns {string} The HTML representation of these errors.
+     */
     #getErrorHtml(errors) {
         if (!errors || errors.length === 0) {
             return '';
@@ -54,6 +66,13 @@ class Reporter {
         return html;
     }
 
+    /**
+     * @private
+     * Transforms Autograder notice objects into their HTML representations.
+     *
+     * @param {Array} notices An array of notice report objects.
+     * @returns {string} The HTML representation of these notices.
+     */
     #getNoticeHtml(notices) {
         if (!notices || notices.length === 0) {
             return '';
@@ -83,6 +102,13 @@ class Reporter {
         return html;
     }
 
+    /**
+     * @private
+     * Transforms Autograder warning objects into their HTML representations.
+     *
+     * @param {Array} warnings An array of warning report objects.
+     * @returns {string} The HTML representation of these warnings.
+     */
     #getWarningHtml(warnings) {
         if (!warnings || warnings.length === 0) {
             return '';
@@ -130,20 +156,13 @@ class Reporter {
     }
 
     /**
-     * Construct a report item that can be added to the reports object.
+     * Transform an array of reports into an HTML page showing the report results.
      *
-     * @param {string} text - Description or message associated with the rule violation.
-     * @param {string} rule [rule=''] - Rule identifier.
-     * @param {string} line [line=0] - Line number or range where the violation occurred.
-     * @param {string} col [col=0] - Column number or range where the violation occurred.
-     * @returns {object} Report item object.
+     * @param {array} reports An array of Autograder reports.
+     * @param {string} title The optional heading to add to the report page.
+     * @param {string} description The optional description to add to the report page.
+     * @returns
      */
-    makeReport(text, rule = '', line = 0, col = 0) {
-        return {
-            col, line, rule, text
-        };
-    }
-
     makeHtmlReport(reports, title = '', description = '') {
         const template = this.#reportTemplate;
 
@@ -210,6 +229,30 @@ class Reporter {
         return this.#makeTemplateReplacements(template, replacements, title, description);
     }
 
+    /**
+     * Construct a report item that can be added to the reports object.
+     *
+     * @param {string} text - Description or message associated with the rule violation.
+     * @param {string} rule [rule=''] - Rule identifier.
+     * @param {string} line [line=0] - Line number or range where the violation occurred.
+     * @param {string} col [col=0] - Column number or range where the violation occurred.
+     * @returns {object} Report item object.
+     */
+    makeReport(text, rule = '', line = 0, col = 0) {
+        return {
+            col, line, rule, text
+        };
+    }
+
+    /**
+     * Replaces template strings in the HTML report template with their actual values.
+     *
+     * @param {string} template The HTML template to use for the HTML report being built.
+     * @param {object} replacements A replacement object that is holding all the values to place into the HTML report.
+     * @param {string} title The optional heading to add to the report page.
+     * @param {string} description The optional description to add to the report page.
+     * @returns {string} The completed HTML report with all template strings replaced.
+     */
     #makeTemplateReplacements(template, replacements, title, description) {
         let output = template;
 
@@ -242,6 +285,13 @@ class Reporter {
         return output;
     }
 
+    /**
+     * Pretty-prints (colorizes) Autograder reports to the console for the user to review.
+     *
+     * @param {array} reports An array of Autograder reports to pretty-print to the console.
+     * @param {string} title The optional heading to add to the report page.
+     * @param {string} description The optional description to add to the report page.
+     */
     printReportToConsole(reports, title = '', description = '') {
         if (title) {
             Print.info(`\n[ ${title} ]`);

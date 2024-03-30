@@ -18,10 +18,6 @@ class CssSom {
         this.updateStructure(struct);
     }
 
-    get src() {
-        return this.#struct.src || '';
-    }
-
     /**
      * Search the SOM and find the first node that matches the requested pattern.
      *
@@ -121,6 +117,13 @@ class CssSom {
     }
 
     /**
+     * Get the source code that was parsed to create the current SOM.
+     */
+    get src() {
+        return this.#struct.src || '';
+    }
+
+    /**
      * Get the SOM object.
      *
      * @returns {object} The SOM object.
@@ -210,7 +213,7 @@ class CssSom {
 
     /**
      * @private
-     * Verify and fix the new SOM structure to avoid any errors with a bad  SOM.
+     * Verify and fix the new SOM structure to avoid any errors with a bad SOM.
      *
      * @param {object} struct The SOM structure that will be used.
      */

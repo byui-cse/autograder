@@ -14,10 +14,6 @@ class JsSom {
         this.#struct = struct;
     }
 
-    get src() {
-        return this.#struct.src || '';
-    }
-
     /**
      * Search the SOM and find the first node that matches the requested pattern.
      *
@@ -35,7 +31,7 @@ class JsSom {
     /**
      * Search the SOM and find all the nodes that match the requested pattern.
      *
-     * @param {string} str - The pattern to search for; querySelector like.
+     * @param {string} str The pattern to search for; querySelector like.
      * @returns An array of matching node objects or an empty array.
      */
     findAll(str) {
@@ -62,7 +58,6 @@ class JsSom {
         }
 
         this.#findAll(som, regex, matches);
-
         return matches;
     }
 
@@ -70,9 +65,9 @@ class JsSom {
      * @private
      * Search for all the matches at the provided SOM level.
      *
-     * @param {object} som - The current SOM to search for matches.
-     * @param {RegExp} regex - The pattern to check for.
-     * @param {Array} matches - An array to append matches to.
+     * @param {object} som The current SOM to search for matches.
+     * @param {RegExp} regex The pattern to check for.
+     * @param {Array} matches An array to append matches to.
      */
     #findAll(som, regex, matches) {
         Object.keys(som).forEach((key) => {
@@ -93,17 +88,10 @@ class JsSom {
     }
 
     /**
-     * Get a portion of the original source file.
-     *
-     * @param {string} source - The source file to pull lines from.
-     * @param {int} lineStart - The line to start at.
-     * @param {int} lineEnd - The line to end at.
-     * @param {int} colStart - The column to start at; send 0 for bodies and blocks.
-     * @param {int} colEnd - The column to end at; send 0 for bodies and blocks.
-     * @returns {string} The portion of the source file requested.
+     * Get the source code that was parsed to create the current SOM.
      */
-    getLines(source, lineStart, lineEnd, colStart = 0, colEnd = 0) {
-        return GetLines(source, lineStart, lineEnd, colStart, colEnd);
+    get src() {
+        return this.#struct.src || '';
     }
 
     /**
@@ -115,26 +103,12 @@ class JsSom {
         return { ...this.#struct };
     }
 
-    getValue(somNode, source = '') {
-        if (!somNode) {
-            return '';
-        }
-
-        if (!node.key) {
-            return '';
-        }
-
-        const node = somNode[somNode.key];
-
-        return this.getLines(
-            source,
-            node.loc.start.line,
-            node.loc.end.line,
-            0,
-            0
-        );
-    }
-
+    /**
+     * @private
+     * Verify and fix the new SOM structure to avoid any errors with a bad SOM.
+     *
+     * @param {object} struct The SOM structure that will be used.
+     */
     #verifyStructure(struct) {
         if (!('som' in struct) || WhatIs(struct.som) !== 'object') {
             struct.som = {};

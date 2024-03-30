@@ -1,6 +1,10 @@
 import * as CssTree from 'css-tree';
 import CssSom from './css-som.js';
 
+/**
+ * Transforms the CSS Tree into Autograder's CssSom.
+ * @class
+ */
 class CssTreeHelper {
 
     #regex = {

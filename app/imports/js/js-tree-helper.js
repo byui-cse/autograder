@@ -1,15 +1,6 @@
-/* eslint-disable prefer-regex-literals */
-/* eslint-disable no-param-reassign */
-
-/**
- * @param {Parser} Acorn - Parses JavaScript code into an AST like tree.
- *
- * @param {JsSom} JsSom - Autograder's structured object model (SOM) for JavaScript.
- * @param {WhatIs} WhatIs - The fastest way to determine the type of anything.
- */
 import { Parser as Acorn } from 'acorn';
 import JsSom from './js-som.js';
-import { GetLines, GetValue, WhatIs } from '../helpers.js';
+import { GetLines, WhatIs } from '../helpers.js';
 
 /**
  * Transforms the Acorn JavaScript tree into Autograder's JsSom.
@@ -18,23 +9,24 @@ import { GetLines, GetValue, WhatIs } from '../helpers.js';
 class JsTreeHelper {
 
     /**
-     * How many nodes have been processed.
      * @private
      * @type {int}
+     * How many nodes have been processed.
      */
     #nodeCount = 0;
 
     /**
-     * The source code for the file being processed.
      * @private
      * @type {string}
+     * The source code for the file being processed.
      */
     #source = '';
 
     /**
-     * Determines the proper key for class and function declarations.
      * @private
-     * @param {Node} node - The Acorn Node being processed.
+     * Determines the proper key for class and function declarations.
+     *
+     * @param {Node} node The Acorn Node being processed.
      * @returns {string} The key that represents this node.
      */
     #createClassOrFunctionKey(node) {
@@ -67,9 +59,10 @@ class JsTreeHelper {
     }
 
     /**
-     * Determines the proper key for class methods (class functions) and properties (class variables).
      * @private
-     * @param {Node} node - The Acorn Node being processed.
+     * Determines the proper key for class methods (class functions) and properties (class variables).
+     *
+     * @param {Node} node The Acorn Node being processed.
      * @returns {string} The key that represents this node.
      */
     #createClassMethodOrPropertyKey(node) {
@@ -96,10 +89,11 @@ class JsTreeHelper {
     }
 
     /**
+     * @private
      * Determines the proper key for declarations like var, let, and const. If a class or function
      * is being stored in a variable we add the appropriate flag (class|function) to the key as well.
-     * @private
-     * @param {Node} node - The Acorn Node being processed.
+     *
+     * @param {Node} node The Acorn Node being processed.
      * @returns {string} The key that represents this node.
      */
     #createDeclarationKey(node) {
@@ -147,9 +141,10 @@ class JsTreeHelper {
     }
 
     /**
-     * Determines the proper key for expression statements.
      * @private
-     * @param {Node} node - The Acorn Node being processed.
+     * Determines the proper key for expression statements.
+     *
+     * @param {Node} node The Acorn Node being processed.
      * @returns {string} The key that represents this node.
      */
     #createExpressionKey(node) {
@@ -189,11 +184,10 @@ class JsTreeHelper {
 
         const key = GetLines(this.#source, startLine, endLine, startColumn, endColumn).trim();
 
-        // If this call is to update an counter modify the key accordingly.
+        // If this call is to update a counter modify the key accordingly.
         if (key.includes('++') || key.includes('+=')) {
             prefix += 'incrementer ';
         }
-
         if (key.includes('--') || key.includes('-=')) {
             prefix += 'decrementer ';
         }
@@ -203,9 +197,10 @@ class JsTreeHelper {
     }
 
     /**
-     * Determines the proper key for more common statements.
      * @private
-     * @param {Node} node - The Acorn Node being processed.
+     * Determines the proper key for more common statements.
+     *
+     * @param {Node} node he Acorn Node being processed.
      * @returns {string} The key that represents this node.
      */
     #createStatementKey(node) {
@@ -259,8 +254,10 @@ class JsTreeHelper {
     }
 
     /**
+     * @private
      * Determine the string (key) that represents this node.
-     * @param {Node} node - The Acorn Node being processed.
+     *
+     * @param {Node} node The Acorn Node being processed.
      * @returns {string} The key that represents this node.
      */
     #getNodeKey(node) {
@@ -304,7 +301,8 @@ class JsTreeHelper {
 
     /**
      * Parses a JavaScript snippet or source code into the JsSom object for use with Autograder.
-     * @param {string} jsStr - The JavaScript source code to process.
+     *
+     * @param {string} jsStr The JavaScript source code to process.
      * @returns {JsSom|Object} A working JsSom or an object with error information.
      */
     parse(jsStr = '') {
@@ -326,7 +324,7 @@ class JsTreeHelper {
             };
         }
 
-        // Hang on to the source code.
+        // Hang on to the source code; we'll need to cut out sections in various methods.
         this.#source = jsStr;
 
         // Start building the JsSom object.
@@ -334,7 +332,6 @@ class JsTreeHelper {
             classes: {},
             error: false,
             functions: {},
-            getLines: GetLines,
             som: {},
             src: jsStr,
             variables: {}
@@ -351,9 +348,10 @@ class JsTreeHelper {
 
     /**
      * Add a node to the som (JsDom) and recursively process any of this nodes children.
-     * @param {Node} node - The Acorn Node being processed.
-     * @param {Object} som - The JsDom like object being built up.
-     * @param {Object} struct - The rest of the structure object that will be used to create a JsSom.
+     *
+     * @param {Node} node The Acorn Node being processed.
+     * @param {Object} som The JsDom like object being built up.
+     * @param {Object} struct The rest of the structure object that will be used to create a JsSom.
      */
     #processNode(node, som, struct) {
         if (!node.type) {
@@ -400,6 +398,7 @@ class JsTreeHelper {
 
         // Add this node to the som which will make up the JsSom tree later.
         const { loc } = node;
+        // eslint-disable-next-line no-param-reassign
         som[key] = {
             children,
             node,
@@ -411,21 +410,25 @@ class JsTreeHelper {
          * them in the JsSom when performing searches.
          */
         if (key.includes('class ')) {
+            // eslint-disable-next-line no-param-reassign
             struct.classes[key] = som[key];
         }
         if (key.includes('function ')) {
+            // eslint-disable-next-line no-param-reassign
             struct.functions[key] = som[key];
         }
         if (['const ', 'let ', 'var '].some((el) => key.includes(el))) {
+            // eslint-disable-next-line no-param-reassign
             struct.variables[key] = som[key];
         }
     }
 
     /**
      * Recursively process the Acorn nodes and transform them into the JsDom tree.
-     * @param {Node} node - The Acorn Node being processed.
-     * @param {Object} som - The JsDom like object being built up.
-     * @param {Object} struct - The rest of the structure object that will be used to create a JsSom.
+     *
+     * @param {Node} node The Acorn Node being processed.
+     * @param {Object} som The JsDom like object being built up.
+     * @param {Object} struct The rest of the structure object that will be used to create a JsSom.
      */
     #processNodes(node, som, struct) {
         if (node.type !== 'Program') {

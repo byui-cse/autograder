@@ -1,8 +1,9 @@
 import { GetLines, GetValue, WhatIs } from '../helpers.js';
 
+/**
+ * The Structured Object Model (SOM) for HTML.
+ */
 class HtmlSom {
-
-    // #keys = {};
 
     #regex = {
         classes: /(\.[\w-]+)/g,
@@ -17,10 +18,12 @@ class HtmlSom {
         this.updateStructure(struct);
     }
 
-    get src() {
-        return this.#struct.src || '';
-    }
-
+    /**
+     * Search the SOM and find the first node that matches the requested pattern.
+     *
+     * @param {string} str The pattern to search for; querySelector like.
+     * @returns {object} The object for the first matching node or an empty object.
+     */
     find(str) {
         const matches = this.findAll(str);
         if (matches.length > 0) {
@@ -29,37 +32,56 @@ class HtmlSom {
         return {};
     }
 
+    /**
+     * Search the SOM and find all the nodes that match the requested pattern.
+     *
+     * @param {string} str The pattern to search for; querySelector like.
+     * @returns {array} An array of matching node objects or an empty array.
+     */
     findAll(str) {
+        // The search string is querySelector like so break it into it's parts (levels).
         const parts = str.trim().split(' ');
 
+        // Start the initial search at the root of the SOM.
         const { som } = this.#struct;
         let search = som;
 
+        // Search down the SOM until no matches are found or we reach the end of the SOM.
         parts.forEach((part) => {
             const { element, selectors } = this.#getSelectorParts(part);
             const matches = [];
 
+            // Find all matches.
             this.#findAll(search, element, selectors, matches);
 
+            // If we found matches treat them as the new SOM.
             if (matches.length > 0) {
-                // search = new Map();
                 search = matches;
             } else {
                 search = som;
             }
         });
 
+        // If search is not equal to the original SOM that means we found match(s).
         if (search !== som) {
             return search;
         }
-        // return new Map();
         return [];
     }
 
-    #findAll(map, element, selectors, matches) {
+    /**
+     * @private
+     * Search for all the matches at the provided SOM level.
+     *
+     * @param {object} som The current SOM to search for matches.
+     * @param {string} element The string that represents this element (tag).
+     * @param {object} selectors An object or arrays for this elements id, classes, and data attributes.
+     * @param {array} matches An array to append matches to.
+     */
+    #findAll(som, element, selectors, matches) {
         const regex = this.#makeRegex(element);
 
-        map.forEach((node, key) => {
+        som.forEach((node, key) => {
 
             if (regex.some((rx) => rx.test(key))) {
 
@@ -114,19 +136,19 @@ class HtmlSom {
     }
 
     /**
-     * Get a portion of the original source file.
-     *
-     * @param {string} source - The source file to pull lines from.
-     * @param {int} lineStart - The line to start at.
-     * @param {int} lineEnd - The line to end at.
-     * @param {int} colStart - The column to start at; send 0 for bodies and blocks.
-     * @param {int} colEnd - The column to end at; send 0 for bodies and blocks.
-     * @returns {string} The portion of the source file requested.
+     * Get the source code that was parsed to create the current SOM.
      */
-    getLine(source, lineStart, lineEnd, colStart = 0, colEnd = 0) {
-        return GetLines(source, lineStart, lineEnd, colStart, colEnd);
+    get src() {
+        return this.#struct.src || '';
     }
 
+    /**
+     * Convert a string representing an html element into the tag (element) itself with attributes
+     * removed and recorded in a separate object.
+     *
+     * @param {string} part The string that makes up the opening tag of an html element.
+     * @returns
+     */
     #getSelectorParts(part) {
         let element = part;
         const selectors = {
@@ -165,10 +187,22 @@ class HtmlSom {
         return { element, selectors };
     }
 
+    /**
+     * Get the SOM object.
+     *
+     * @returns {object} The SOM object.
+     */
     getStructure() {
         return { ...this.#struct };
     }
 
+    /**
+     * @private
+     * Build RegExp objects that can find if a string contains our pattern.
+     *
+     * @param {string} str The search string (pattern) we need want to look for.
+     * @returns {array} An array of RegExp objects that can find if a string contains our pattern.
+     */
     #makeRegex(str = '.*') {
         const regex = [
             new RegExp(`^${str}$|\\s+${str}$|^${str}\\s+|\\s+${str}\\s+`)
@@ -177,27 +211,23 @@ class HtmlSom {
         return regex;
     }
 
+    /**
+     * Allow the SOM object to be updated or replaced after initialization.
+     *
+     * @param {object} struct The new SOM object.
+     */
     updateStructure(struct = new Map()) {
         this.#verifyStructure(struct);
         this.#struct = struct;
-        // this.#keys = {
-        //     classes: struct.classes.keys(),
-        //     data: struct.data.keys(),
-        //     ids: struct.ids.keys()
-        // };
     }
 
+    /**
+     * @private
+     * Verify and fix the new SOM structure to avoid any errors with a bad SOM.
+     *
+     * @param {object} struct The SOM structure that will be used.
+     */
     #verifyStructure(struct) {
-        // if (!('classes' in struct) || WhatIs(struct.classes) !== 'map') {
-        //     // eslint-disable-next-line no-param-reassign
-        //     struct.classes = new Map();
-        // }
-
-        // if (!('data' in struct) || WhatIs(struct.data) !== 'map') {
-        //     // eslint-disable-next-line no-param-reassign
-        //     struct.data = new Map();
-        // }
-
         if (!('som' in struct) || WhatIs(struct.som) !== 'map') {
             // eslint-disable-next-line no-param-reassign
             struct.som = new Map();
