@@ -17,7 +17,7 @@
   "type": "module",
   "name": "@byui-cse/autograder",
   "description": "An automated code review tool for programming assignments.",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "main": "app/autograder.js",
   "repository": {
     "type": "git",

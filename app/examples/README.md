@@ -1,7 +1,3 @@
-# Autoloader Custom Tests
+# Examples
 
-The primary feature of Autograder is the ability to create custom tests for just about anything you want. The files in this directory demonstrate what custom tests look like and the various ways you can register this tests with Autograder.
-
-For simple assignments where you will only grade (test) a few things, you may want to use one of the combined approaches: `combined-auto-register.js` or `combined.js` For more complicated situations it may be best to separate tests into their own files and/or sub-files.
-
-Please review the files in this directory to learn more.
+The Autograder is designed with flexibility in mind, allowing you to tailor it to your specific requirements. Within this directory, we've included a variety of examples to illustrate how AG can be implemented. However, these are just starting points. We encourage you to experiment and develop a solution that is perfectly suited to your particular needs.

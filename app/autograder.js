@@ -41,6 +41,14 @@ class Autograder {
         this.#options = options;
     }
 
+    /**
+     * @private
+     * Fetch the requested file from the internet.
+     *
+     * @param {string} url The url to fetch and process.
+     * @param {object} options A request objects to use the the client.request call.
+     * @returns A promise that will resolve to the source code of the file at url or an error object.
+     */
     async #fetchUrl(url, options = {}) {
         // Normalize URL and handle both HTTP and HTTPS
         const parsedUrl = new URL(url);
@@ -65,6 +73,7 @@ class Autograder {
             }
         };
 
+        // Merge the users request options with our default and required options.
         const mergedOptions = { ...defaultOptions, ...options };
 
         // Make the request and return a promise
@@ -86,30 +95,36 @@ class Autograder {
         });
     }
 
-    saveHtmlReport(html, destination) {
-        if (WhatIs(html) !== 'string') {
-            return false;
-        }
-
-        // Extract the directory path from the destination
-        const dirPath = Path.dirname(destination);
-
-        // Create the directory if it doesn't exist
-        Fs.mkdirSync(dirPath, { recursive: true });
-
-        // Write the HTML content to the destination file
-        Fs.writeFileSync(destination, html, 'utf8');
-        return true;
-    }
-
+    /**
+     * Transform report objects into a single HTML report.
+     *
+     * @param {array} reports An array of report objects.
+     * @param {string} title Optional title for the HTML reports.
+     * @param {string} description Optional description for the HTML reports.
+     * @returns The source code for the HTML report.
+     */
     getHtmlReport(reports, title = '', description = '') {
         return Reporter.makeHtmlReport(reports, title, description);
     }
 
+    /**
+     * Transform report objects into colorful console statements.
+     *
+     * @param {array} reports An array of report objects.
+     * @param {string} title Optional title for the HTML reports.
+     * @param {string} description Optional description for the HTML reports.
+     */
     printReportToConsole(reports, title = '', description = '') {
         Reporter.printReportToConsole(reports, title, description);
     }
 
+    /**
+     * Search a directory recursively and process all supported file types.
+     *
+     * @param {string} dir The absolute or relative path to a directory on the device/server to process.
+     * @param {array} extensions An array of file types to process; will be limited to our builtin support files.
+     * @returns {array} An array of report options.
+     */
     async processDirRecursively(dir, extensions = this.#supportedFileTypes) {
         // Clean the user supplied file extensions.
         const safeExtensions = [];
@@ -153,6 +168,15 @@ class Autograder {
         return reports;
     }
 
+    /**
+     * @private
+     * Run the appropriate linter and tests on the provided files source code.
+     *
+     * @param {string} ext The type (extension) of file being processed.
+     * @param {string} file The filepath or url of the file being processed.
+     * @param {string} source The source code of the file being processed.
+     * @returns {object} A report object for this file.
+     */
     async #processFile(ext, file, source) {
         // Get linter reports.
         let linterReport = Reporter.getReportsObject();
@@ -208,6 +232,12 @@ class Autograder {
         return combinedReport;
     }
 
+    /**
+     * Run the appropriate linter and tests on the provided file.
+     *
+     * @param {string} absolutePath The absolute path to a file to process.
+     * @returns {object} A report object for this file.
+     */
     async processFile(absolutePath) {
         const ext = Path.extname(absolutePath).replace('.', '');
         const errorReport = Reporter.getReportsObject();
@@ -238,6 +268,12 @@ class Autograder {
         return report;
     }
 
+    /**
+     * Run the appropriate linter and tests on the provided url.
+     *
+     * @param {string} url The complete URL to a file to be processed.
+     * @returns {object} A report object for this file.
+     */
     async processFileByUrl(url) {
         const urlObj = new URL(url);
         const ext = Path.extname(urlObj.pathname).replace('.', '') || 'html';
@@ -263,6 +299,80 @@ class Autograder {
         return report;
     }
 
+    /**
+     * Register a CSS test with the Autograder.
+     *
+     * @param {Function} callback The callback function for this test.
+     */
+    registerCssTest(callback) {
+        if (WhatIs(callback) !== 'function') {
+            return;
+        }
+        this.#tests.css.push(callback);
+    }
+
+    /**
+     * Register configurations and rules for the CSS linter.
+     *
+     * @param {Object} obj The CSS linting configuration object; stylelint.
+     */
+    registerCssLinterConfig(obj = {}) {
+        this.#linter.registerCssConfig(obj);
+    }
+
+    /**
+     * Register a HTML test with the Autograder.
+     *
+     * @param {Function} callback The callback function for this test.
+     */
+    registerHtmlTest(callback) {
+        if (WhatIs(callback) !== 'function') {
+            return;
+        }
+        this.#tests.html.push(callback);
+    }
+
+    /**
+     * Register configurations and rules for the HTML linter.
+     *
+     * @param {Object} obj The HTML linting configuration object; HTMLHint.
+     */
+    registerHtmlLinterConfig(obj = {}) {
+        this.#linter.registerHtmlConfig(obj);
+    }
+
+    /**
+     * Register a JS test with the Autograder.
+     *
+     * @param {Function} callback The callback function for this test.
+     */
+    registerJsTest(callback) {
+        if (WhatIs(callback) !== 'function') {
+            return;
+        }
+        this.#tests.js.push(callback);
+    }
+
+    /**
+     * Register configurations and rules for the JS linter.
+     *
+     * @param {Object} obj The JS linting configuration object; ESLint.
+     */
+    registerJsLinterConfig(obj = {}) {
+        this.#linter.registerJsConfig(obj);
+    }
+
+    /**
+     * Mass register various tests using testing objects that following this format:
+     *
+     * {
+     *     type: 'html',
+     *     tests: [testCallbackFunctionName1, testCallbackFunctionName2, testCallbackFunctionName3]
+     * };
+     *
+     * @param {object} testObj An AG testing object that registers multiple texts by language type.
+     * @returns
+     */
     registerTests(testObj) {
         if (WhatIs(testObj) !== 'object') {
             return;
@@ -295,37 +405,27 @@ class Autograder {
         }
     }
 
-    registerCssTest(callback) {
-        if (WhatIs(callback) !== 'function') {
-            return;
+    /**
+     * Save a file (source code) to a designated destination on the device/server.
+     *
+     * @param {string} htmlReport Save the HTML report (or any other string) to the provided destination.
+     * @param {string} destination The absolute path to the destination (filename included) to save this data to.
+     * @returns {boolean} True if everything appears to be good, false if not.
+     */
+    saveHtmlReport(htmlReport, destination) {
+        if (WhatIs(htmlReport) !== 'string') {
+            return false;
         }
-        this.#tests.css.push(callback);
-    }
 
-    registerCssLinterConfig(obj = {}) {
-        this.#linter.registerCssConfig(obj);
-    }
+        // Extract the directory path from the destination
+        const dirPath = Path.dirname(destination);
 
-    registerHtmlTest(callback) {
-        if (WhatIs(callback) !== 'function') {
-            return;
-        }
-        this.#tests.html.push(callback);
-    }
+        // Create the directory if it doesn't exist
+        Fs.mkdirSync(dirPath, { recursive: true });
 
-    registerHtmlLinterConfig(obj = {}) {
-        this.#linter.registerHtmlConfig(obj);
-    }
-
-    registerJsTest(callback) {
-        if (WhatIs(callback) !== 'function') {
-            return;
-        }
-        this.#tests.js.push(callback);
-    }
-
-    registerJsLinterConfig(obj = {}) {
-        this.#linter.registerJsConfig(obj);
+        // Write the HTML content to the destination file
+        Fs.writeFileSync(destination, htmlReport, 'utf8');
+        return true;
     }
 
 }

@@ -1,3 +1,7 @@
+/**
+ * Returns key absolute application paths to any file that imports this script.
+ */
+
 import Path from 'path';
 import { fileURLToPath as FileURLToPath } from 'url';
 
